@@ -1,0 +1,492 @@
+import { create } from 'zustand';
+import type { 
+  LeagueMode, 
+  DifficultyMode, 
+  SquadSlot, 
+  Team, 
+  Player, 
+  MatchSummary, 
+  SeasonState, 
+  UserStats, 
+  Achievement, 
+  LeaderboardEntry 
+} from '../types/game';
+import { INITIAL_SQUAD_SLOTS } from '../data/slotsConfig';
+import { IPL_TEAMS, BBL_TEAMS, WORLD_CRICKET_TEAMS } from '../data/mockTeams';
+import { INITIAL_ACHIEVEMENTS } from '../data/achievements';
+import { simulateMatch, generateTournamentStructure } from '../utils/simEngine';
+import { calculateSquadChemistry } from '../utils/chemistry';
+
+interface GameStore {
+  // Config & State
+  leagueMode: LeagueMode;
+  difficultyMode: DifficultyMode;
+  username: string;
+  slots: SquadSlot[];
+  respinTokens: number;
+  availableTeams: Team[];
+  spunTeam: Team | null;
+  activePickerSlotId: number | null;
+  isAdModalOpen: boolean;
+  isShareModalOpen: boolean;
+  isTrophyModalOpen: boolean;
+  isLeaderboardModalOpen: boolean;
+  activeMatchSummary: MatchSummary | null;
+  seasonState: SeasonState;
+
+  // Global Player Unique Constraint
+  draftedPlayerIds: string[];
+
+  // Meta & Economy
+  coins: number;
+  userStats: UserStats;
+  achievements: Achievement[];
+  leaderboardEntries: LeaderboardEntry[];
+
+  // Actions
+  setLeagueMode: (mode: LeagueMode) => void;
+  setDifficultyMode: (mode: DifficultyMode) => void;
+  setUsername: (name: string) => void;
+  setSpunTeam: (team: Team | null) => void;
+  openPlayerPicker: (slotId: number) => void;
+  closePlayerPicker: () => void;
+  assignPlayerToSlot: (slotId: number, player: Player, fromTeamName: string) => void;
+  removePlayerFromSlot: (slotId: number) => void;
+  resetDraft: () => void;
+  useRespinToken: () => boolean;
+  grantRespinTokens: (count: number) => void;
+  addCoins: (amount: number) => void;
+  setIsAdModalOpen: (open: boolean) => void;
+  setIsShareModalOpen: (open: boolean) => void;
+  setIsTrophyModalOpen: (open: boolean) => void;
+  setIsLeaderboardModalOpen: (open: boolean) => void;
+  setActiveMatchSummary: (match: MatchSummary | null) => void;
+  runNextMatch: () => MatchSummary | null;
+  simulateFullSeason: () => void;
+  restartSeason: () => void;
+  claimAchievementReward: (id: string) => void;
+  submitToLeaderboard: () => void;
+}
+
+export const getTeamsByMode = (mode: LeagueMode): Team[] => {
+  switch (mode) {
+    case 'IPL':
+      return IPL_TEAMS;
+    case 'BBL':
+      return BBL_TEAMS;
+    case 'WORLD_CRICKET':
+      return WORLD_CRICKET_TEAMS;
+    default:
+      return IPL_TEAMS;
+  }
+};
+
+const SAVED_COINS_KEY = '16_0_coins_bank';
+const SAVED_STATS_KEY = '16_0_user_stats';
+const SAVED_USERNAME_KEY = '16_0_username';
+const SAVED_LEADERBOARD_KEY = '16_0_leaderboard';
+
+const INITIAL_MOCK_LEADERBOARD: LeaderboardEntry[] = [
+  {
+    id: 'lb-1',
+    username: 'CricketKing99',
+    leagueMode: 'IPL',
+    wins: 16,
+    losses: 0,
+    squadOvr: 97,
+    chemistry: 100,
+    isChampion: true,
+    score: 3570,
+    draftedPlayers: ['MS Dhoni', 'Virat Kohli', 'Jasprit Bumrah', 'Sachin Tendulkar', 'AB de Villiers'],
+    createdAt: '2026-07-20',
+  },
+  {
+    id: 'lb-2',
+    username: 'SpinWizard_AU',
+    leagueMode: 'BBL',
+    wins: 15,
+    losses: 1,
+    squadOvr: 94,
+    chemistry: 95,
+    isChampion: true,
+    score: 3415,
+    draftedPlayers: ['Shane Warne', 'Glenn Maxwell', 'Travis Head', 'Rashid Khan', 'Adam Gilchrist'],
+    createdAt: '2026-07-21',
+  },
+  {
+    id: 'lb-3',
+    username: 'Hitman_45',
+    leagueMode: 'IPL',
+    wins: 14,
+    losses: 2,
+    squadOvr: 95,
+    chemistry: 90,
+    isChampion: true,
+    score: 3300,
+    draftedPlayers: ['Rohit Sharma', 'Hardik Pandya', 'Suryakumar Yadav', 'Sunil Narine', 'Kieron Pollard'],
+    createdAt: '2026-07-22',
+  },
+  {
+    id: 'lb-4',
+    username: 'MasterBlaster',
+    leagueMode: 'WORLD_CRICKET',
+    wins: 13,
+    losses: 3,
+    squadOvr: 96,
+    chemistry: 88,
+    isChampion: false,
+    score: 2700,
+    draftedPlayers: ['Viv Richards', 'Ricky Ponting', 'Wasim Akram', 'Ben Stokes', 'Michael Holding'],
+    createdAt: '2026-07-22',
+  },
+];
+
+const loadCoins = (): number => {
+  if (typeof window === 'undefined') return 250;
+  const saved = localStorage.getItem(SAVED_COINS_KEY);
+  return saved ? parseInt(saved, 10) : 250;
+};
+
+const loadStats = (): UserStats => {
+  if (typeof window === 'undefined') return { bestStreak: 0, totalSeasonsPlayed: 0, highestTeamOvr: 0, totalWins: 0, leagueTitlesWon: 0 };
+  const saved = localStorage.getItem(SAVED_STATS_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      // Fallback
+    }
+  }
+  return { bestStreak: 0, totalSeasonsPlayed: 0, highestTeamOvr: 0, totalWins: 0, leagueTitlesWon: 0 };
+};
+
+const loadUsername = (): string => {
+  if (typeof window === 'undefined') return 'CricketGamer';
+  return localStorage.getItem(SAVED_USERNAME_KEY) || 'CricketGamer';
+};
+
+const loadLeaderboard = (): LeaderboardEntry[] => {
+  if (typeof window === 'undefined') return INITIAL_MOCK_LEADERBOARD;
+  const saved = localStorage.getItem(SAVED_LEADERBOARD_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      // Fallback
+    }
+  }
+  return INITIAL_MOCK_LEADERBOARD;
+};
+
+export const useGameStore = create<GameStore>((set, get) => ({
+  leagueMode: 'IPL',
+  difficultyMode: 'EASY',
+  username: loadUsername(),
+  slots: INITIAL_SQUAD_SLOTS,
+  respinTokens: 3,
+  availableTeams: IPL_TEAMS,
+  spunTeam: null,
+  activePickerSlotId: null,
+  isAdModalOpen: false,
+  isShareModalOpen: false,
+  isTrophyModalOpen: false,
+  isLeaderboardModalOpen: false,
+  activeMatchSummary: null,
+  draftedPlayerIds: [],
+  coins: loadCoins(),
+  userStats: loadStats(),
+  achievements: INITIAL_ACHIEVEMENTS,
+  leaderboardEntries: loadLeaderboard(),
+
+  seasonState: {
+    currentMatchIndex: 0,
+    matches: [],
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    isCompleted: false,
+    isFlawless: false,
+  },
+
+  setLeagueMode: (mode) => {
+    const teams = getTeamsByMode(mode);
+    set({
+      leagueMode: mode,
+      availableTeams: teams,
+      spunTeam: null,
+      slots: INITIAL_SQUAD_SLOTS,
+      draftedPlayerIds: [],
+      seasonState: {
+        currentMatchIndex: 0,
+        matches: [],
+        wins: 0,
+        losses: 0,
+        ties: 0,
+        isCompleted: false,
+        isFlawless: false,
+      }
+    });
+  },
+
+  setDifficultyMode: (mode) => set({ difficultyMode: mode }),
+
+  setUsername: (name) => {
+    localStorage.setItem(SAVED_USERNAME_KEY, name);
+    set({ username: name });
+  },
+
+  setSpunTeam: (team) => {
+    const { slots, openPlayerPicker } = get();
+    set({ spunTeam: team });
+
+    if (team) {
+      const firstEmptySlot = slots.find((s) => s.assignedPlayer === null);
+      if (firstEmptySlot) {
+        openPlayerPicker(firstEmptySlot.id);
+      }
+    }
+  },
+
+  openPlayerPicker: (slotId) => set({ activePickerSlotId: slotId }),
+  closePlayerPicker: () => set({ activePickerSlotId: null }),
+
+  assignPlayerToSlot: (slotId, player, fromTeamName) => {
+    const { draftedPlayerIds, slots, userStats } = get();
+    
+    const updatedDrafted = [...draftedPlayerIds, player.id];
+
+    const nextSlots = slots.map((s) =>
+      s.id === slotId ? { ...s, assignedPlayer: player, assignedFromTeam: fromTeamName } : s
+    );
+
+    const { effectiveSquadRating } = calculateSquadChemistry(nextSlots);
+    const newHighestOvr = Math.max(userStats.highestTeamOvr, effectiveSquadRating);
+
+    const updatedStats = { ...userStats, highestTeamOvr: newHighestOvr };
+    localStorage.setItem(SAVED_STATS_KEY, JSON.stringify(updatedStats));
+
+    set({
+      slots: nextSlots,
+      draftedPlayerIds: updatedDrafted,
+      spunTeam: null,
+      activePickerSlotId: null,
+      userStats: updatedStats,
+    });
+  },
+
+  removePlayerFromSlot: (slotId) => {
+    const { slots, draftedPlayerIds } = get();
+    const slotToRemove = slots.find((s) => s.id === slotId);
+    const playerToRemove = slotToRemove?.assignedPlayer;
+
+    const nextDrafted = playerToRemove
+      ? draftedPlayerIds.filter((id) => id !== playerToRemove.id)
+      : draftedPlayerIds;
+
+    set({
+      slots: slots.map((s) =>
+        s.id === slotId ? { ...s, assignedPlayer: null, assignedFromTeam: undefined } : s
+      ),
+      draftedPlayerIds: nextDrafted,
+    });
+  },
+
+  resetDraft: () => set({
+    slots: INITIAL_SQUAD_SLOTS,
+    spunTeam: null,
+    draftedPlayerIds: [],
+    seasonState: {
+      currentMatchIndex: 0,
+      matches: [],
+      wins: 0,
+      losses: 0,
+      ties: 0,
+      isCompleted: false,
+      isFlawless: false,
+    }
+  }),
+
+  useRespinToken: () => {
+    const { respinTokens } = get();
+    if (respinTokens <= 0) return false;
+    set({ respinTokens: respinTokens - 1 });
+    return true;
+  },
+
+  grantRespinTokens: (count) => {
+    set((state) => ({ respinTokens: state.respinTokens + count }));
+  },
+
+  addCoins: (amount) => {
+    const { coins } = get();
+    const nextCoins = coins + amount;
+    localStorage.setItem(SAVED_COINS_KEY, nextCoins.toString());
+    set({ coins: nextCoins });
+  },
+
+  setIsAdModalOpen: (open) => set({ isAdModalOpen: open }),
+  setIsShareModalOpen: (open) => set({ isShareModalOpen: open }),
+  setIsTrophyModalOpen: (open) => set({ isTrophyModalOpen: open }),
+  setIsLeaderboardModalOpen: (open) => set({ isLeaderboardModalOpen: open }),
+  setActiveMatchSummary: (match) => set({ activeMatchSummary: match }),
+
+  runNextMatch: () => {
+    const { seasonState, slots, userStats, addCoins } = get();
+    if (seasonState.currentMatchIndex >= 16 || seasonState.isCompleted) return null;
+
+    const matchIndex = seasonState.currentMatchIndex + 1;
+    const match = simulateMatch(matchIndex, slots);
+
+    const newWins = seasonState.wins + (match.result === 'WIN' ? 1 : 0);
+    const newLosses = seasonState.losses + (match.result === 'LOSS' ? 1 : 0);
+    const newTies = seasonState.ties + (match.result === 'TIE' ? 1 : 0);
+    const isCompleted = matchIndex === 16;
+    const isFlawless = isCompleted && newWins === 16;
+
+    if (match.result === 'WIN') {
+      addCoins(25);
+    }
+
+    let tournamentResult = seasonState.tournamentResult;
+
+    if (isCompleted) {
+      const allMatches = [...seasonState.matches, match];
+      tournamentResult = generateTournamentStructure(allMatches);
+
+      const bonus = isFlawless ? 500 : newWins * 20;
+      addCoins(bonus);
+
+      const newBestStreak = Math.max(userStats.bestStreak, newWins);
+      const newStats: UserStats = {
+        ...userStats,
+        bestStreak: newBestStreak,
+        totalSeasonsPlayed: userStats.totalSeasonsPlayed + 1,
+        totalWins: userStats.totalWins + newWins,
+        leagueTitlesWon: userStats.leagueTitlesWon + (tournamentResult.isChampion ? 1 : 0),
+      };
+      localStorage.setItem(SAVED_STATS_KEY, JSON.stringify(newStats));
+      set({ userStats: newStats });
+    }
+
+    const nextState: SeasonState = {
+      currentMatchIndex: matchIndex,
+      matches: [...seasonState.matches, match],
+      wins: newWins,
+      losses: newLosses,
+      ties: newTies,
+      isCompleted,
+      isFlawless,
+      tournamentResult,
+    };
+
+    set({
+      seasonState: nextState,
+      activeMatchSummary: match,
+    });
+
+    return match;
+  },
+
+  simulateFullSeason: () => {
+    const { slots, userStats, addCoins } = get();
+    let wins = 0;
+    let losses = 0;
+    let ties = 0;
+    const matches: MatchSummary[] = [];
+
+    for (let i = 1; i <= 16; i++) {
+      const match = simulateMatch(i, slots);
+      matches.push(match);
+      if (match.result === 'WIN') wins++;
+      else if (match.result === 'LOSS') losses++;
+      else ties++;
+    }
+
+    const isFlawless = wins === 16;
+    const tournamentResult = generateTournamentStructure(matches);
+
+    const earnedCoins = wins * 25 + (isFlawless ? 500 : wins * 15);
+    addCoins(earnedCoins);
+
+    const newBestStreak = Math.max(userStats.bestStreak, wins);
+    const newStats: UserStats = {
+      ...userStats,
+      bestStreak: newBestStreak,
+      totalSeasonsPlayed: userStats.totalSeasonsPlayed + 1,
+      totalWins: userStats.totalWins + wins,
+      leagueTitlesWon: userStats.leagueTitlesWon + (tournamentResult.isChampion ? 1 : 0),
+    };
+    localStorage.setItem(SAVED_STATS_KEY, JSON.stringify(newStats));
+
+    set({
+      seasonState: {
+        currentMatchIndex: 16,
+        matches,
+        wins,
+        losses,
+        ties,
+        isCompleted: true,
+        isFlawless,
+        tournamentResult,
+      },
+      userStats: newStats,
+      isShareModalOpen: true,
+    });
+  },
+
+  restartSeason: () => set({
+    slots: INITIAL_SQUAD_SLOTS,
+    spunTeam: null,
+    draftedPlayerIds: [],
+    seasonState: {
+      currentMatchIndex: 0,
+      matches: [],
+      wins: 0,
+      losses: 0,
+      ties: 0,
+      isCompleted: false,
+      isFlawless: false,
+    }
+  }),
+
+  claimAchievementReward: (id) => {
+    const { achievements, addCoins } = get();
+    const target = achievements.find((a) => a.id === id);
+    if (target && !target.isUnlocked) {
+      addCoins(target.rewardCoins);
+      set({
+        achievements: achievements.map((a) => (a.id === id ? { ...a, isUnlocked: true } : a)),
+      });
+    }
+  },
+
+  submitToLeaderboard: () => {
+    const { username, seasonState, slots, leagueMode, leaderboardEntries } = get();
+    const { chemistryScore, effectiveSquadRating } = calculateSquadChemistry(slots);
+
+    const playerNames = slots.map((s) => s.assignedPlayer?.name || 'Empty Slot');
+    const isChamp = seasonState.tournamentResult?.isChampion || false;
+
+    // Formula: Wins*100 + OVR*10 + Chem*5 + (Champion ? 500 : 0)
+    const score = seasonState.wins * 100 + effectiveSquadRating * 10 + chemistryScore * 5 + (isChamp ? 500 : 0);
+
+    const newEntry: LeaderboardEntry = {
+      id: `lb-${Date.now()}`,
+      username: username || 'CricketFan',
+      leagueMode,
+      wins: seasonState.wins,
+      losses: seasonState.losses,
+      squadOvr: effectiveSquadRating,
+      chemistry: chemistryScore,
+      isChampion: isChamp,
+      score,
+      draftedPlayers: playerNames,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+
+    const updatedList = [...leaderboardEntries, newEntry].sort((a, b) => b.score - a.score);
+    localStorage.setItem(SAVED_LEADERBOARD_KEY, JSON.stringify(updatedList));
+
+    set({ leaderboardEntries: updatedList });
+  },
+}));
