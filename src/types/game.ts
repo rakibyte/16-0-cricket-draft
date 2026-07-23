@@ -144,6 +144,13 @@ export interface UserStats {
   leagueTitlesWon: number;
 }
 
+export interface UserAccount {
+  email: string | null;
+  username: string;
+  isRegistered: boolean;
+  guestSeasonsPlayed: number;
+}
+
 export interface LeaderboardEntry {
   id: string;
   username: string;
@@ -156,4 +163,29 @@ export interface LeaderboardEntry {
   score: number;
   draftedPlayers: string[]; // List of player names
   createdAt: string;
+}
+
+export interface MultiplayerPlayer {
+  id: string;
+  username: string;
+  isHost: boolean;
+  isReady: boolean;
+  hasFinishedDraft: boolean;
+  hasFinishedSim: boolean;
+  wins?: number;
+  squadOvr?: number;
+  score?: number;
+  rank?: number;
+  isChampion?: boolean;
+  draftedSquad?: string[];
+}
+
+export interface MultiplayerRoom {
+  roomCode: string;
+  hostUsername: string;
+  leagueMode: LeagueMode;
+  status: 'LOBBY' | 'DRAFTING' | 'SIMULATING' | 'REVEAL';
+  timerSeconds: number; // 180s = 3 minutes
+  maxPlayers: number;
+  players: MultiplayerPlayer[];
 }

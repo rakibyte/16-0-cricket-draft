@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { Play, Shield, Flame, Globe, User, Award, BarChart2, Sparkles } from 'lucide-react';
+import { Play, Shield, Flame, Globe, User, Award, BarChart2, Sparkles, Users } from 'lucide-react';
 import type { LeagueMode } from '../../types/game';
 
 export const HomePage: React.FC = () => {
@@ -13,6 +13,7 @@ export const HomePage: React.FC = () => {
     setIsProfileModalOpen,
     setIsTrophyModalOpen,
     setIsLeaderboardModalOpen,
+    setIsMultiplayerModalOpen,
     resetDraft,
   } = useGameStore();
 
@@ -41,14 +42,22 @@ export const HomePage: React.FC = () => {
           Spin historic rosters, pick 1 star per team to construct a rigid 11-player squad, and simulate a 16-match campaign to win the League!
         </p>
 
-        {/* Primary CTA: START NEW DRAFT */}
-        <div className="pt-2">
+        {/* Primary CTA Buttons: Solo Draft & Multiplayer Room */}
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={() => handleStartDraft()}
-            className="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 hover:brightness-110 text-slate-950 font-black text-xl sm:text-2xl shadow-[0_0_35px_rgba(52,211,153,0.5)] transition transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3 mx-auto"
+            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 hover:brightness-110 text-slate-950 font-black text-xl shadow-[0_0_35px_rgba(52,211,153,0.5)] transition transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3"
           >
-            <Play className="w-7 h-7 fill-current" />
-            <span>PLAY DRAFT CHALLENGE</span>
+            <Play className="w-6 h-6 fill-current" />
+            <span>SOLO DRAFT CHALLENGE</span>
+          </button>
+
+          <button
+            onClick={() => setIsMultiplayerModalOpen(true)}
+            className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:brightness-110 text-white font-black text-xl shadow-[0_0_35px_rgba(168,85,247,0.5)] transition transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3"
+          >
+            <Users className="w-6 h-6" />
+            <span>MULTIPLAYER ROOM</span>
           </button>
         </div>
       </div>
@@ -75,7 +84,7 @@ export const HomePage: React.FC = () => {
             className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 font-extrabold text-xs flex items-center justify-center gap-2 hover:bg-slate-800 transition"
           >
             <User className="w-4 h-4 text-emerald-400" />
-            <span>Personal Account & History</span>
+            <span>Account & History</span>
           </button>
           <button
             onClick={() => setIsLeaderboardModalOpen(true)}

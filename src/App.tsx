@@ -12,6 +12,9 @@ import { MatchScorecardModal } from './components/simulation/MatchScorecardModal
 import { TrophyCabinetModal } from './components/meta/TrophyCabinetModal';
 import { LeaderboardModal } from './components/meta/LeaderboardModal';
 import { UserProfileModal } from './components/meta/UserProfileModal';
+import { AuthModal } from './components/auth/AuthModal';
+import { MultiplayerModal } from './components/multiplayer/MultiplayerModal';
+import { MultiplayerDraftBanner } from './components/multiplayer/MultiplayerDraftBanner';
 import { useGameStore } from './store/useGameStore';
 
 export const App: React.FC = () => {
@@ -40,6 +43,9 @@ export const App: React.FC = () => {
           <AllTimeFranchisePicker />
         ) : (
           <>
+            {/* Active Multiplayer Room 3-Min Draft Banner */}
+            <MultiplayerDraftBanner />
+
             {/* Top Grid Layout: Left Reel Slot Spinner, Right Cricket Pitch */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* [CLUB] x [SEASON] Reel Slot Spinner Column */}
@@ -72,6 +78,8 @@ export const App: React.FC = () => {
       <TrophyCabinetModal />
       <LeaderboardModal />
       <UserProfileModal />
+      <AuthModal />
+      <MultiplayerModal />
 
       {/* Footer */}
       <footer className="border-t border-slate-900 py-4 text-center text-xs text-slate-500 font-medium">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { RefreshCw, Video, Globe, Shield, Flame, Award, Eye, EyeOff, BarChart2, User, Home, Sparkles, RotateCcw } from 'lucide-react';
+import { RefreshCw, Video, Globe, Shield, Flame, Award, Eye, EyeOff, BarChart2, User, Home, Sparkles, RotateCcw, Users, LogIn } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { 
@@ -13,11 +13,14 @@ export const Header: React.FC = () => {
     difficultyMode,
     setDifficultyMode,
     username,
+    userAccount,
     respinTokens, 
+    setIsAuthModalOpen,
     setIsAdModalOpen, 
     setIsTrophyModalOpen,
     setIsLeaderboardModalOpen,
     setIsProfileModalOpen,
+    setIsMultiplayerModalOpen,
     resetDraft,
     userStats 
   } = useGameStore();
@@ -115,8 +118,18 @@ export const Header: React.FC = () => {
           </div>
         )}
 
-        {/* Right Actions: Account Profile, Home, Difficulty Toggle, Leaderboard, Trophy Cabinet, Respins */}
+        {/* Right Actions: Multiplayer, Account Profile, Home, Difficulty Toggle, Leaderboard, Trophy Cabinet */}
         <div className="flex items-center gap-2">
+          {/* Multiplayer Room Button */}
+          <button
+            onClick={() => setIsMultiplayerModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-black hover:brightness-110 transition shadow-md"
+            title="Create or Join Live 3-Minute Multiplayer Draft Room"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Multiplayer Room</span>
+          </button>
+
           {/* Home View Button */}
           {currentView === 'DRAFT' && (
             <button
@@ -129,15 +142,26 @@ export const Header: React.FC = () => {
             </button>
           )}
 
-          {/* Personal Account Profile Button */}
-          <button
-            onClick={() => setIsProfileModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-950 to-slate-900 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold hover:border-emerald-400 transition shadow-md"
-            title="Personal Account Profile & Run History"
-          >
-            <User className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="max-w-[90px] truncate">{username}</span>
-          </button>
+          {/* User Account / Sign In Button */}
+          {userAccount.isRegistered ? (
+            <button
+              onClick={() => setIsProfileModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-950 to-slate-900 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold hover:border-emerald-400 transition shadow-md"
+              title="Personal Account Profile & Run History"
+            >
+              <User className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="max-w-[90px] truncate">{username}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black hover:bg-amber-500/30 transition shadow"
+              title="Register Email Account for Unlimited Runs & Online Play"
+            >
+              <LogIn className="w-3.5 h-3.5 text-amber-400" />
+              <span>Register / Login</span>
+            </button>
+          )}
 
           {/* Easy vs Hard Difficulty Mode Toggle */}
           {currentView === 'DRAFT' && (
