@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header } from './components/common/Header';
 import { HomePage } from './components/home/HomePage';
+import { AllTimeFranchisePicker } from './components/draft/AllTimeFranchisePicker';
 import { ReelSpinner } from './components/draft/ReelSpinner';
 import { CricketPitch } from './components/pitch/CricketPitch';
 import { MatchSimulator } from './components/simulation/MatchSimulator';
@@ -16,11 +17,15 @@ import { useGameStore } from './store/useGameStore';
 export const App: React.FC = () => {
   const {
     currentView,
+    leagueMode,
+    selectedAllTimeFranchise,
     availableTeams,
     setSpunTeam,
     setIsAdModalOpen,
     respinTokens,
   } = useGameStore();
+
+  const isAllTimePickerNeeded = leagueMode === 'ALL_TIME_XI' && !selectedAllTimeFranchise;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
@@ -31,6 +36,8 @@ export const App: React.FC = () => {
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
         {currentView === 'HOME' ? (
           <HomePage />
+        ) : isAllTimePickerNeeded ? (
+          <AllTimeFranchisePicker />
         ) : (
           <>
             {/* Top Grid Layout: Left Reel Slot Spinner, Right Cricket Pitch */}

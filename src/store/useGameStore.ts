@@ -24,6 +24,7 @@ interface GameStore {
   currentView: AppView;
   leagueMode: LeagueMode;
   difficultyMode: DifficultyMode;
+  selectedAllTimeFranchise: string | null;
   username: string;
   slots: SquadSlot[];
   respinTokens: number;
@@ -52,6 +53,7 @@ interface GameStore {
   // Actions
   setCurrentView: (view: AppView) => void;
   setLeagueMode: (mode: LeagueMode) => void;
+  setSelectedAllTimeFranchise: (franchiseId: string | null) => void;
   setDifficultyMode: (mode: DifficultyMode) => void;
   setUsername: (name: string) => void;
   setSpunTeam: (team: Team | null) => void;
@@ -76,7 +78,30 @@ interface GameStore {
   submitToLeaderboard: () => void;
 }
 
-export const getTeamsByMode = (mode: LeagueMode): Team[] => {
+export const getTeamsByMode = (mode: LeagueMode, selectedFranchiseId?: string | null): Team[] => {
+  if (mode === 'ALL_TIME_XI') {
+    if (selectedFranchiseId) {
+      // Filter teams matching this franchise or country shortCode / id across all seasons
+      const allPool = [...IPL_TEAMS, ...BBL_TEAMS, ...WORLD_CRICKET_TEAMS, ...ALL_TIME_TEAMS];
+      const matchKey = selectedFranchiseId.toLowerCase();
+      
+      const filtered = allPool.filter((t) => {
+        const teamId = t.id.toLowerCase();
+        const shortCode = t.shortCode.toLowerCase();
+        const teamName = t.name.toLowerCase();
+
+        return (
+          teamId.includes(matchKey) ||
+          shortCode.includes(matchKey) ||
+          teamName.includes(matchKey)
+        );
+      });
+
+      if (filtered.length > 0) return filtered;
+    }
+    return ALL_TIME_TEAMS;
+  }
+
   switch (mode) {
     case 'IPL':
       return IPL_TEAMS;
@@ -84,8 +109,6 @@ export const getTeamsByMode = (mode: LeagueMode): Team[] => {
       return BBL_TEAMS;
     case 'WORLD_CRICKET':
       return WORLD_CRICKET_TEAMS;
-    case 'ALL_TIME_XI':
-      return ALL_TIME_TEAMS;
     default:
       return IPL_TEAMS;
   }
@@ -193,6 +216,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   currentView: 'HOME',
   leagueMode: 'IPL',
   difficultyMode: 'EASY',
+  selectedAllTimeFranchise: null,
   username: loadUsername(),
   slots: INITIAL_SQUAD_SLOTS,
   respinTokens: 3,
@@ -221,14 +245,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     ties: 0,
     isCompleted: false,
     isFlawless: false,
+    hasSubmittedLeaderboard: false,
   },
 
   setCurrentView: (view) => set({ currentView: view }),
 
   setLeagueMode: (mode) => {
-    const teams = getTeamsByMode(mode);
+    const teams = getTeamsByMode(mode, null);
     set({
       leagueMode: mode,
+      selectedAllTimeFranchise: null,
       availableTeams: teams,
       spunTeam: null,
       slots: INITIAL_SQUAD_SLOTS,
@@ -241,7 +267,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ties: 0,
         isCompleted: false,
         isFlawless: false,
+        hasSubmittedLeaderboard: false,
       }
+    });
+  },
+
+  setSelectedAllTimeFranchise: (franchiseId) => {
+    const { leagueMode } = get();
+    const teams = getTeamsByMode(leagueMode, franchiseId);
+    set({
+      selectedAllTimeFranchise: franchiseId,
+      availableTeams: teams,
+      spunTeam: null,
     });
   },
 
@@ -323,6 +360,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ties: 0,
       isCompleted: false,
       isFlawless: false,
+      hasSubmittedLeaderboard: false,
     }
   }),
 
@@ -411,6 +449,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const nextState: SeasonState = {
+      ...seasonState,
       currentMatchIndex: matchIndex,
       matches: [...seasonState.matches, match],
       wins: newWins,
@@ -490,6 +529,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         isCompleted: true,
         isFlawless,
         tournamentResult,
+        hasSubmittedLeaderboard: false,
       },
       userStats: newStats,
       runHistory: updatedHistory,
@@ -509,6 +549,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ties: 0,
       isCompleted: false,
       isFlawless: false,
+      hasSubmittedLeaderboard: false,
     }
   }),
 
@@ -524,7 +565,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   submitToLeaderboard: () => {
-    const { username, seasonState, slots, leagueMode, leaderboardEntries } = get();
+    const { username, seasonState, slots, leagueMode, leaderboardEntries, lastSubmittedLeaderboardId } = get();
+    
+    // PREVENT DUPLICATE SUBMISSIONS FOR THE SAME COMPLETED SEASON!
+    if (seasonState.hasSubmittedLeaderboard && lastSubmittedLeaderboardId) {
+      set({ isLeaderboardModalOpen: true });
+      return;
+    }
+
     const { chemistryScore, effectiveSquadRating } = calculateSquadChemistry(slots);
 
     const playerNames = slots.map((s) => s.assignedPlayer?.name || 'Empty Slot');
@@ -554,6 +602,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       leaderboardEntries: updatedList,
       lastSubmittedLeaderboardId: entryId,
       isLeaderboardModalOpen: true,
+      seasonState: {
+        ...seasonState,
+        hasSubmittedLeaderboard: true,
+      }
     });
   },
 }));

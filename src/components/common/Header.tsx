@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { RefreshCw, Video, Globe, Shield, Flame, Award, Eye, EyeOff, BarChart2, User, Home, Sparkles } from 'lucide-react';
+import { RefreshCw, Video, Globe, Shield, Flame, Award, Eye, EyeOff, BarChart2, User, Home, Sparkles, RotateCcw } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { 
@@ -8,6 +8,8 @@ export const Header: React.FC = () => {
     setCurrentView,
     leagueMode, 
     setLeagueMode, 
+    selectedAllTimeFranchise,
+    setSelectedAllTimeFranchise,
     difficultyMode,
     setDifficultyMode,
     username,
@@ -99,6 +101,17 @@ export const Header: React.FC = () => {
               <Sparkles className="w-3.5 h-3.5 text-purple-300 fill-current" />
               All-Time XI
             </button>
+
+            {leagueMode === 'ALL_TIME_XI' && selectedAllTimeFranchise && (
+              <button
+                onClick={() => setSelectedAllTimeFranchise(null)}
+                className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-purple-950 border border-purple-500/50 text-purple-300 text-[11px] font-black hover:bg-purple-900 transition ml-1"
+                title="Switch Franchise or Country"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Change Club
+              </button>
+            )}
           </div>
         )}
 

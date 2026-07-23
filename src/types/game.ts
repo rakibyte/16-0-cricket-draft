@@ -40,6 +40,17 @@ export interface Team {
   roster: Player[];
 }
 
+export interface AllTimeFranchise {
+  id: string;
+  name: string;
+  type: 'CLUB' | 'COUNTRY';
+  shortCode: string;
+  primaryColor: string;
+  badgeSymbol: string;
+  eraRange: string;
+  description: string;
+}
+
 export interface SquadSlot {
   id: number;              // 1 to 11
   slotName: string;        // e.g., "Opener #1", "Wicketkeeper", "Fast Bowler #1"
@@ -98,6 +109,7 @@ export interface SeasonState {
   isCompleted: boolean;
   isFlawless: boolean;       // 16-0 achieved!
   tournamentResult?: TournamentResult;
+  hasSubmittedLeaderboard?: boolean;
 }
 
 export interface Achievement {
