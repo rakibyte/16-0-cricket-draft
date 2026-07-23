@@ -94,6 +94,7 @@ interface GameStore {
   leaveMultiplayerRoom: () => void;
   toggleMultiplayerReady: () => void;
   startMultiplayerDraft: () => void;
+  syncMultiplayerSimResult: (wins: number, squadOvr: number, chemistry: number, isChamp: boolean) => void;
 }
 
 export const getTeamsByMode = (mode: LeagueMode, selectedFranchiseId?: string | null): Team[] => {
@@ -410,7 +411,6 @@ export const useGameStore = create<GameStore>((set, get) => {
     resetDraft: () => {
       const { userAccount, setIsAuthModalOpen } = get();
       
-      // Guest Registration Gate: Allow 2 free guest seasons
       if (!userAccount.isRegistered && userAccount.guestSeasonsPlayed >= 2) {
         setIsAuthModalOpen(true);
         return;
@@ -460,8 +460,38 @@ export const useGameStore = create<GameStore>((set, get) => {
     setIsMultiplayerModalOpen: (open) => set({ isMultiplayerModalOpen: open }),
     setActiveMatchSummary: (match) => set({ activeMatchSummary: match }),
 
+    syncMultiplayerSimResult: (wins, squadOvr, chemistry, isChamp) => {
+      const { multiplayerRoom, username } = get();
+      if (!multiplayerRoom) return;
+
+      const userScore = wins * 100 + squadOvr * 10 + chemistry * 5 + (isChamp ? 500 : 0);
+
+      const updatedPlayers = multiplayerRoom.players.map((p) => {
+        if (p.username === username) {
+          return {
+            ...p,
+            hasFinishedSim: true,
+            hasFinishedDraft: true,
+            wins,
+            squadOvr,
+            score: userScore,
+            isChampion: isChamp,
+          };
+        }
+        return p;
+      });
+
+      set({
+        multiplayerRoom: {
+          ...multiplayerRoom,
+          status: 'REVEAL',
+          players: updatedPlayers,
+        },
+      });
+    },
+
     runNextMatch: () => {
-      const { seasonState, slots, userStats, addCoins, leagueMode, runHistory, userAccount, setIsAuthModalOpen } = get();
+      const { seasonState, slots, userStats, addCoins, leagueMode, runHistory, userAccount, setIsAuthModalOpen, syncMultiplayerSimResult } = get();
       if (seasonState.currentMatchIndex >= 16 || seasonState.isCompleted) return null;
 
       const matchIndex = seasonState.currentMatchIndex + 1;
@@ -497,12 +527,10 @@ export const useGameStore = create<GameStore>((set, get) => {
         };
         localStorage.setItem(SAVED_STATS_KEY, JSON.stringify(newStats));
 
-        // Increment guest seasons played
         const nextGuestCount = userAccount.guestSeasonsPlayed + 1;
         const updatedAccount = { ...userAccount, guestSeasonsPlayed: nextGuestCount };
         localStorage.setItem(SAVED_ACCOUNT_KEY, JSON.stringify(updatedAccount));
 
-        // Record in Run History
         const { chemistryScore, effectiveSquadRating } = calculateSquadChemistry(slots);
         const runEntry: RunHistoryEntry = {
           id: `run-${Date.now()}`,
@@ -522,6 +550,8 @@ export const useGameStore = create<GameStore>((set, get) => {
         localStorage.setItem(SAVED_RUN_HISTORY_KEY, JSON.stringify(updatedHistory));
 
         set({ userStats: newStats, userAccount: updatedAccount, runHistory: updatedHistory });
+
+        syncMultiplayerSimResult(newWins, effectiveSquadRating, chemistryScore, tournamentResult.isChampion);
 
         if (!userAccount.isRegistered && nextGuestCount >= 2) {
           setIsAuthModalOpen(true);
@@ -549,7 +579,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     simulateFullSeason: () => {
-      const { slots, userStats, addCoins, leagueMode, runHistory, userAccount, setIsAuthModalOpen } = get();
+      const { slots, userStats, addCoins, leagueMode, runHistory, userAccount, setIsAuthModalOpen, syncMultiplayerSimResult } = get();
       let wins = 0;
       let losses = 0;
       let ties = 0;
@@ -580,12 +610,10 @@ export const useGameStore = create<GameStore>((set, get) => {
       };
       localStorage.setItem(SAVED_STATS_KEY, JSON.stringify(newStats));
 
-      // Increment guest count
       const nextGuestCount = userAccount.guestSeasonsPlayed + 1;
       const updatedAccount = { ...userAccount, guestSeasonsPlayed: nextGuestCount };
       localStorage.setItem(SAVED_ACCOUNT_KEY, JSON.stringify(updatedAccount));
 
-      // Record in Run History
       const { chemistryScore, effectiveSquadRating } = calculateSquadChemistry(slots);
       const runEntry: RunHistoryEntry = {
         id: `run-${Date.now()}`,
@@ -622,6 +650,8 @@ export const useGameStore = create<GameStore>((set, get) => {
         isShareModalOpen: true,
       });
 
+      syncMultiplayerSimResult(wins, effectiveSquadRating, chemistryScore, tournamentResult.isChampion);
+
       if (!userAccount.isRegistered && nextGuestCount >= 2) {
         setIsAuthModalOpen(true);
       }
@@ -657,7 +687,6 @@ export const useGameStore = create<GameStore>((set, get) => {
     submitToLeaderboard: () => {
       const { username, seasonState, slots, leagueMode, leaderboardEntries, lastSubmittedLeaderboardId, multiplayerRoom } = get();
       
-      // PREVENT DUPLICATE SUBMISSIONS FOR THE SAME COMPLETED SEASON!
       if (seasonState.hasSubmittedLeaderboard && lastSubmittedLeaderboardId) {
         set({ isLeaderboardModalOpen: true });
         return;
@@ -688,7 +717,6 @@ export const useGameStore = create<GameStore>((set, get) => {
       const updatedList = [...leaderboardEntries, newEntry].sort((a, b) => b.score - a.score);
       localStorage.setItem(SAVED_LEADERBOARD_KEY, JSON.stringify(updatedList));
 
-      // If in a multiplayer room, update the multiplayer room reveal state!
       let updatedRoom = multiplayerRoom;
       if (multiplayerRoom) {
         const updatedPlayers = multiplayerRoom.players.map((p) => {
@@ -724,7 +752,6 @@ export const useGameStore = create<GameStore>((set, get) => {
       });
     },
 
-    // 38-0 Style Live Multiplayer Room Actions
     createMultiplayerRoom: (mode, maxPlayers, timerSeconds) => {
       const { username } = get();
       const code = `CRIC-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -738,10 +765,9 @@ export const useGameStore = create<GameStore>((set, get) => {
         hasFinishedSim: false,
       };
 
-      // Mock AI opponents joining room lobby
       const aiRivals: MultiplayerPlayer[] = [
-        { id: 'mp-ai-1', username: 'Hitman_45', isHost: false, isReady: true, hasFinishedDraft: false, hasFinishedSim: false, wins: 14, squadOvr: 91, score: 3100 },
-        { id: 'mp-ai-2', username: 'SpinWizard_AU', isHost: false, isReady: true, hasFinishedDraft: false, hasFinishedSim: false, wins: 12, squadOvr: 89, score: 2850 },
+        { id: 'mp-ai-1', username: 'Hitman_45', isHost: false, isReady: true, hasFinishedDraft: false, hasFinishedSim: true, wins: 14, squadOvr: 91, score: 3100 },
+        { id: 'mp-ai-2', username: 'SpinWizard_AU', isHost: false, isReady: true, hasFinishedDraft: false, hasFinishedSim: true, wins: 12, squadOvr: 89, score: 2850 },
       ].slice(0, maxPlayers - 1);
 
       const room: MultiplayerRoom = {
@@ -776,9 +802,9 @@ export const useGameStore = create<GameStore>((set, get) => {
         timerSeconds: 180,
         maxPlayers: 4,
         players: [
-          { id: 'mp-host', username: 'LobbyHost_XI', isHost: true, isReady: true, hasFinishedDraft: false, hasFinishedSim: false },
+          { id: 'mp-host', username: 'LobbyHost_XI', isHost: true, isReady: true, hasFinishedDraft: true, hasFinishedSim: true, wins: 13, squadOvr: 90, score: 2950 },
           player,
-          { id: 'mp-ai-3', username: 'CricketPro_99', isHost: false, isReady: true, hasFinishedDraft: false, hasFinishedSim: false },
+          { id: 'mp-ai-3', username: 'CricketPro_99', isHost: false, isReady: true, hasFinishedDraft: true, hasFinishedSim: true, wins: 11, squadOvr: 87, score: 2600 },
         ],
       };
 

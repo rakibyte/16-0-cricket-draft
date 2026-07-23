@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { RefreshCw, Video, Globe, Shield, Flame, Award, Eye, EyeOff, BarChart2, User, Home, Sparkles, RotateCcw, Users, LogIn } from 'lucide-react';
+import { RefreshCw, Globe, Shield, Flame, Award, Eye, EyeOff, BarChart2, User, Home, Sparkles, RotateCcw, Users, LogIn } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { 
@@ -14,9 +14,7 @@ export const Header: React.FC = () => {
     setDifficultyMode,
     username,
     userAccount,
-    respinTokens, 
     setIsAuthModalOpen,
-    setIsAdModalOpen, 
     setIsTrophyModalOpen,
     setIsLeaderboardModalOpen,
     setIsProfileModalOpen,
@@ -210,17 +208,6 @@ export const Header: React.FC = () => {
           >
             <Award className="w-4 h-4" />
           </button>
-
-          {/* Ad Re-spin Button */}
-          {currentView === 'DRAFT' && (
-            <button
-              onClick={() => setIsAdModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold hover:bg-slate-700 transition"
-            >
-              <Video className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              <span>Re-spins ({respinTokens})</span>
-            </button>
-          )}
 
           {/* Reset Button */}
           {currentView === 'DRAFT' && (
