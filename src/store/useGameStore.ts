@@ -34,8 +34,8 @@ interface GameStore {
   activeMatchSummary: MatchSummary | null;
   seasonState: SeasonState;
 
-  // Global Player Unique Constraint
-  draftedPlayerIds: string[];
+  // Global Player Unique Constraint (Normalized player names)
+  draftedPlayerNames: string[];
 
   // Meta & Economy
   coins: number;
@@ -192,7 +192,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   isTrophyModalOpen: false,
   isLeaderboardModalOpen: false,
   activeMatchSummary: null,
-  draftedPlayerIds: [],
+  draftedPlayerNames: [],
   coins: loadCoins(),
   userStats: loadStats(),
   achievements: INITIAL_ACHIEVEMENTS,
@@ -215,7 +215,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       availableTeams: teams,
       spunTeam: null,
       slots: INITIAL_SQUAD_SLOTS,
-      draftedPlayerIds: [],
+      draftedPlayerNames: [],
       seasonState: {
         currentMatchIndex: 0,
         matches: [],
@@ -251,9 +251,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   closePlayerPicker: () => set({ activePickerSlotId: null }),
 
   assignPlayerToSlot: (slotId, player, fromTeamName) => {
-    const { draftedPlayerIds, slots, userStats } = get();
+    const { draftedPlayerNames, slots, userStats } = get();
+    const normName = player.name.toLowerCase().trim();
     
-    const updatedDrafted = [...draftedPlayerIds, player.id];
+    const updatedDrafted = [...draftedPlayerNames, normName];
 
     const nextSlots = slots.map((s) =>
       s.id === slotId ? { ...s, assignedPlayer: player, assignedFromTeam: fromTeamName } : s
@@ -267,7 +268,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     set({
       slots: nextSlots,
-      draftedPlayerIds: updatedDrafted,
+      draftedPlayerNames: updatedDrafted,
       spunTeam: null,
       activePickerSlotId: null,
       userStats: updatedStats,
@@ -275,26 +276,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   removePlayerFromSlot: (slotId) => {
-    const { slots, draftedPlayerIds } = get();
+    const { slots, draftedPlayerNames } = get();
     const slotToRemove = slots.find((s) => s.id === slotId);
     const playerToRemove = slotToRemove?.assignedPlayer;
 
-    const nextDrafted = playerToRemove
-      ? draftedPlayerIds.filter((id) => id !== playerToRemove.id)
-      : draftedPlayerIds;
+    const normName = playerToRemove?.name.toLowerCase().trim();
+
+    const nextDrafted = normName
+      ? draftedPlayerNames.filter((n) => n !== normName)
+      : draftedPlayerNames;
 
     set({
       slots: slots.map((s) =>
         s.id === slotId ? { ...s, assignedPlayer: null, assignedFromTeam: undefined } : s
       ),
-      draftedPlayerIds: nextDrafted,
+      draftedPlayerNames: nextDrafted,
     });
   },
 
   resetDraft: () => set({
     slots: INITIAL_SQUAD_SLOTS,
     spunTeam: null,
-    draftedPlayerIds: [],
+    draftedPlayerNames: [],
     seasonState: {
       currentMatchIndex: 0,
       matches: [],
@@ -437,7 +440,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   restartSeason: () => set({
     slots: INITIAL_SQUAD_SLOTS,
     spunTeam: null,
-    draftedPlayerIds: [],
+    draftedPlayerNames: [],
     seasonState: {
       currentMatchIndex: 0,
       matches: [],
@@ -467,7 +470,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const playerNames = slots.map((s) => s.assignedPlayer?.name || 'Empty Slot');
     const isChamp = seasonState.tournamentResult?.isChampion || false;
 
-    // Formula: Wins*100 + OVR*10 + Chem*5 + (Champion ? 500 : 0)
     const score = seasonState.wins * 100 + effectiveSquadRating * 10 + chemistryScore * 5 + (isChamp ? 500 : 0);
 
     const newEntry: LeaderboardEntry = {

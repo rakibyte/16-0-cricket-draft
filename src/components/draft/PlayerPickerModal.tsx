@@ -15,7 +15,6 @@ export const PlayerPickerModal: React.FC = () => {
     closePlayerPicker,
     assignPlayerToSlot,
     slots,
-    draftedPlayerIds,
     difficultyMode,
   } = useGameStore();
 
@@ -26,8 +25,14 @@ export const PlayerPickerModal: React.FC = () => {
 
   const isHardMode = difficultyMode === 'HARD';
 
+  // Get normalized names of all players already in the current XI
+  const draftedPlayerNames = slots
+    .map((s) => s.assignedPlayer?.name.toLowerCase().trim())
+    .filter((name): name is string => Boolean(name));
+
   const handleSelectPlayer = (player: Player) => {
-    if (draftedPlayerIds.includes(player.id)) return;
+    const normName = player.name.toLowerCase().trim();
+    if (draftedPlayerNames.includes(normName)) return; // Strict duplicate name prevention!
 
     playLockPlayerSound();
     triggerHapticLock();
@@ -71,7 +76,8 @@ export const PlayerPickerModal: React.FC = () => {
         {/* Player Roster Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
           {spunTeam.roster.map((player) => {
-            const isAlreadyDrafted = draftedPlayerIds.includes(player.id);
+            const normName = player.name.toLowerCase().trim();
+            const isAlreadyDrafted = draftedPlayerNames.includes(normName);
             const eff = calculateSlotEfficiency(player, currentSlot.requiredRole);
 
             return (
@@ -118,7 +124,7 @@ export const PlayerPickerModal: React.FC = () => {
                   <div className="flex items-center gap-1">
                     {isAlreadyDrafted ? (
                       <span className="text-slate-500 text-[10px] font-extrabold flex items-center gap-1">
-                        <Lock className="w-3 h-3" /> Already in XI
+                        <Lock className="w-3 h-3 text-amber-400" /> {player.name} Already in XI
                       </span>
                     ) : isHardMode ? (
                       <span className="text-rose-400 text-[11px] font-extrabold flex items-center gap-1">
@@ -147,7 +153,7 @@ export const PlayerPickerModal: React.FC = () => {
                     )}
                   </div>
                   <span className="text-[10px] text-slate-400 font-medium">
-                    {isHardMode ? 'Hidden in Hard Mode' : eff.reason}
+                    {isAlreadyDrafted ? 'Duplicate Player Restricted' : isHardMode ? 'Hidden in Hard Mode' : eff.reason}
                   </span>
                 </div>
 
@@ -161,7 +167,7 @@ export const PlayerPickerModal: React.FC = () => {
                   }`}
                 >
                   {isAlreadyDrafted ? (
-                    'Unavailable (Already Drafted)'
+                    'Unavailable (Same Player in XI)'
                   ) : (
                     <>
                       <Zap className="w-3.5 h-3.5 fill-current" />
