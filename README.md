@@ -63,13 +63,7 @@
 - **Live Draft Countdown**: Ticking countdown timer banner during drafting.
 - **Blind Simulation & Head-to-Head Opponents Scoreboard**: Players simulate in secret, then reveal final standings to crown the Room Champion 🏆!
 
-### ✉️ 5. Personal Account & Guest Play Gate
-- **2 Free Guest Seasons**: New players can play up to 2 guest draft runs without logging in.
-- **Email Registration**: Register with email to save career stats, unlock unlimited runs, and sync across devices.
 
-### 💰 6. Rewarded Video Ads & Monetization
-- Watch 10-second sponsor video ads to earn +3 Re-spin Tokens or +100 Coins.
-- Built-in monetization hooks ready for Google AdMob and Unity Ads SDKs.
 
 ---
 
