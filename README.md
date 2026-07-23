@@ -19,6 +19,29 @@
 
 ---
 
+## 📸 Gameplay Screenshots
+
+### 🏠 1. Home Hub & League Selection
+*Choose your tournament mode (IPL, BBL, World Legends, All-Time XI), launch solo draft challenges, or host 3-minute multiplayer rooms.*
+
+![16-0 Home Page Hub](./docs/images/home_screen.png)
+
+---
+
+### 🎰 2. Reel Slot Spinner & Cricket Pitch XI
+*Spin through historical franchise and country rosters across 17+ seasons, lock position stars, and balance squad chemistry.*
+
+![16-0 Reel Slot Spinner & Cricket Pitch](./docs/images/pitch_screen.png)
+
+---
+
+### 🏏 3. Role-Locked Player Drafting Engine
+*Inspect player ratings, legend badges, and strict role efficiency fit percentages before locking players into your XI.*
+
+![16-0 Player Picker Modal](./docs/images/picker_screen.png)
+
+---
+
 ## 🌟 Game Features
 
 ### 🎰 1. Reel Slot Drafting Engine
@@ -47,17 +70,6 @@
 ### 💰 6. Rewarded Video Ads & Monetization
 - Watch 10-second sponsor video ads to earn +3 Re-spin Tokens or +100 Coins.
 - Built-in monetization hooks ready for Google AdMob and Unity Ads SDKs.
-
----
-
-## 📸 Image Showcase
-
-| Feature | Preview |
-| :--- | :--- |
-| **38-0 Style Home Hub** | Clean landing menu with league selector & account profile |
-| **Reel Slot Spinner** | Spin historic rosters & draft position-locked stars |
-| **Cricket Pitch XI** | 11-player squad grid with chemistry rating calculation |
-| **Multiplayer Room** | Live countdown timer & head-to-head opponent scoreboards |
 
 ---
 
