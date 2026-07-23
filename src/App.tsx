@@ -74,8 +74,8 @@ export const App: React.FC = () => {
       <UserProfileModal />
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 py-4 text-center text-xs text-slate-500">
-        16-0 Cricket Squad Draft &copy; {new Date().getFullYear()} &bull; Built with React, Tailwind CSS, Framer Motion & Zustand
+      <footer className="border-t border-slate-900 py-4 text-center text-xs text-slate-500 font-medium">
+        16-0 Cricket Squad Draft &copy; {new Date().getFullYear()} &bull; The Ultimate Cricket Draft Challenge
       </footer>
     </div>
   );
