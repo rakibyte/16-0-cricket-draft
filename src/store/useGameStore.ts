@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { 
   LeagueMode, 
   DifficultyMode, 
+  AppView,
   SquadSlot, 
   Team, 
   Player, 
@@ -9,7 +10,8 @@ import type {
   SeasonState, 
   UserStats, 
   Achievement, 
-  LeaderboardEntry 
+  LeaderboardEntry,
+  RunHistoryEntry 
 } from '../types/game';
 import { INITIAL_SQUAD_SLOTS } from '../data/slotsConfig';
 import { IPL_TEAMS, BBL_TEAMS, WORLD_CRICKET_TEAMS } from '../data/mockTeams';
@@ -18,7 +20,8 @@ import { simulateMatch, generateTournamentStructure } from '../utils/simEngine';
 import { calculateSquadChemistry } from '../utils/chemistry';
 
 interface GameStore {
-  // Config & State
+  // Config & View State
+  currentView: AppView;
   leagueMode: LeagueMode;
   difficultyMode: DifficultyMode;
   username: string;
@@ -31,6 +34,7 @@ interface GameStore {
   isShareModalOpen: boolean;
   isTrophyModalOpen: boolean;
   isLeaderboardModalOpen: boolean;
+  isProfileModalOpen: boolean;
   activeMatchSummary: MatchSummary | null;
   seasonState: SeasonState;
 
@@ -42,8 +46,10 @@ interface GameStore {
   userStats: UserStats;
   achievements: Achievement[];
   leaderboardEntries: LeaderboardEntry[];
+  runHistory: RunHistoryEntry[];
 
   // Actions
+  setCurrentView: (view: AppView) => void;
   setLeagueMode: (mode: LeagueMode) => void;
   setDifficultyMode: (mode: DifficultyMode) => void;
   setUsername: (name: string) => void;
@@ -60,6 +66,7 @@ interface GameStore {
   setIsShareModalOpen: (open: boolean) => void;
   setIsTrophyModalOpen: (open: boolean) => void;
   setIsLeaderboardModalOpen: (open: boolean) => void;
+  setIsProfileModalOpen: (open: boolean) => void;
   setActiveMatchSummary: (match: MatchSummary | null) => void;
   runNextMatch: () => MatchSummary | null;
   simulateFullSeason: () => void;
@@ -85,6 +92,7 @@ const SAVED_COINS_KEY = '16_0_coins_bank';
 const SAVED_STATS_KEY = '16_0_user_stats';
 const SAVED_USERNAME_KEY = '16_0_username';
 const SAVED_LEADERBOARD_KEY = '16_0_leaderboard';
+const SAVED_RUN_HISTORY_KEY = '16_0_run_history';
 
 const INITIAL_MOCK_LEADERBOARD: LeaderboardEntry[] = [
   {
@@ -126,19 +134,6 @@ const INITIAL_MOCK_LEADERBOARD: LeaderboardEntry[] = [
     draftedPlayers: ['Rohit Sharma', 'Hardik Pandya', 'Suryakumar Yadav', 'Sunil Narine', 'Kieron Pollard'],
     createdAt: '2026-07-22',
   },
-  {
-    id: 'lb-4',
-    username: 'MasterBlaster',
-    leagueMode: 'WORLD_CRICKET',
-    wins: 13,
-    losses: 3,
-    squadOvr: 96,
-    chemistry: 88,
-    isChampion: false,
-    score: 2700,
-    draftedPlayers: ['Viv Richards', 'Ricky Ponting', 'Wasim Akram', 'Ben Stokes', 'Michael Holding'],
-    createdAt: '2026-07-22',
-  },
 ];
 
 const loadCoins = (): number => {
@@ -148,7 +143,7 @@ const loadCoins = (): number => {
 };
 
 const loadStats = (): UserStats => {
-  if (typeof window === 'undefined') return { bestStreak: 0, totalSeasonsPlayed: 0, highestTeamOvr: 0, totalWins: 0, leagueTitlesWon: 0 };
+  if (typeof window === 'undefined') return { bestStreak: 0, totalSeasonsPlayed: 0, highestTeamOvr: 0, totalWins: 0, totalLosses: 0, leagueTitlesWon: 0 };
   const saved = localStorage.getItem(SAVED_STATS_KEY);
   if (saved) {
     try {
@@ -157,7 +152,7 @@ const loadStats = (): UserStats => {
       // Fallback
     }
   }
-  return { bestStreak: 0, totalSeasonsPlayed: 0, highestTeamOvr: 0, totalWins: 0, leagueTitlesWon: 0 };
+  return { bestStreak: 0, totalSeasonsPlayed: 0, highestTeamOvr: 0, totalWins: 0, totalLosses: 0, leagueTitlesWon: 0 };
 };
 
 const loadUsername = (): string => {
@@ -178,7 +173,21 @@ const loadLeaderboard = (): LeaderboardEntry[] => {
   return INITIAL_MOCK_LEADERBOARD;
 };
 
+const loadRunHistory = (): RunHistoryEntry[] => {
+  if (typeof window === 'undefined') return [];
+  const saved = localStorage.getItem(SAVED_RUN_HISTORY_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      // Fallback
+    }
+  }
+  return [];
+};
+
 export const useGameStore = create<GameStore>((set, get) => ({
+  currentView: 'HOME',
   leagueMode: 'IPL',
   difficultyMode: 'EASY',
   username: loadUsername(),
@@ -191,12 +200,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   isShareModalOpen: false,
   isTrophyModalOpen: false,
   isLeaderboardModalOpen: false,
+  isProfileModalOpen: false,
   activeMatchSummary: null,
   draftedPlayerNames: [],
   coins: loadCoins(),
   userStats: loadStats(),
   achievements: INITIAL_ACHIEVEMENTS,
   leaderboardEntries: loadLeaderboard(),
+  runHistory: loadRunHistory(),
 
   seasonState: {
     currentMatchIndex: 0,
@@ -207,6 +218,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     isCompleted: false,
     isFlawless: false,
   },
+
+  setCurrentView: (view) => set({ currentView: view }),
 
   setLeagueMode: (mode) => {
     const teams = getTeamsByMode(mode);
@@ -331,10 +344,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setIsShareModalOpen: (open) => set({ isShareModalOpen: open }),
   setIsTrophyModalOpen: (open) => set({ isTrophyModalOpen: open }),
   setIsLeaderboardModalOpen: (open) => set({ isLeaderboardModalOpen: open }),
+  setIsProfileModalOpen: (open) => set({ isProfileModalOpen: open }),
   setActiveMatchSummary: (match) => set({ activeMatchSummary: match }),
 
   runNextMatch: () => {
-    const { seasonState, slots, userStats, addCoins } = get();
+    const { seasonState, slots, userStats, addCoins, leagueMode, runHistory } = get();
     if (seasonState.currentMatchIndex >= 16 || seasonState.isCompleted) return null;
 
     const matchIndex = seasonState.currentMatchIndex + 1;
@@ -365,10 +379,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
         bestStreak: newBestStreak,
         totalSeasonsPlayed: userStats.totalSeasonsPlayed + 1,
         totalWins: userStats.totalWins + newWins,
+        totalLosses: userStats.totalLosses + newLosses,
         leagueTitlesWon: userStats.leagueTitlesWon + (tournamentResult.isChampion ? 1 : 0),
       };
       localStorage.setItem(SAVED_STATS_KEY, JSON.stringify(newStats));
-      set({ userStats: newStats });
+
+      // Record in Run History
+      const { chemistryScore, effectiveSquadRating } = calculateSquadChemistry(slots);
+      const runEntry: RunHistoryEntry = {
+        id: `run-${Date.now()}`,
+        date: new Date().toISOString().split('T')[0],
+        leagueMode,
+        wins: newWins,
+        losses: newLosses,
+        ties: newTies,
+        squadOvr: effectiveSquadRating,
+        chemistry: chemistryScore,
+        isChampion: tournamentResult.isChampion,
+        isFlawless,
+        squadNames: slots.map((s) => s.assignedPlayer?.name || 'Empty'),
+      };
+
+      const updatedHistory = [runEntry, ...runHistory];
+      localStorage.setItem(SAVED_RUN_HISTORY_KEY, JSON.stringify(updatedHistory));
+
+      set({ userStats: newStats, runHistory: updatedHistory });
     }
 
     const nextState: SeasonState = {
@@ -391,7 +426,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   simulateFullSeason: () => {
-    const { slots, userStats, addCoins } = get();
+    const { slots, userStats, addCoins, leagueMode, runHistory } = get();
     let wins = 0;
     let losses = 0;
     let ties = 0;
@@ -417,9 +452,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
       bestStreak: newBestStreak,
       totalSeasonsPlayed: userStats.totalSeasonsPlayed + 1,
       totalWins: userStats.totalWins + wins,
+      totalLosses: userStats.totalLosses + losses,
       leagueTitlesWon: userStats.leagueTitlesWon + (tournamentResult.isChampion ? 1 : 0),
     };
     localStorage.setItem(SAVED_STATS_KEY, JSON.stringify(newStats));
+
+    // Record in Run History
+    const { chemistryScore, effectiveSquadRating } = calculateSquadChemistry(slots);
+    const runEntry: RunHistoryEntry = {
+      id: `run-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      leagueMode,
+      wins,
+      losses,
+      ties,
+      squadOvr: effectiveSquadRating,
+      chemistry: chemistryScore,
+      isChampion: tournamentResult.isChampion,
+      isFlawless,
+      squadNames: slots.map((s) => s.assignedPlayer?.name || 'Empty'),
+    };
+
+    const updatedHistory = [runEntry, ...runHistory];
+    localStorage.setItem(SAVED_RUN_HISTORY_KEY, JSON.stringify(updatedHistory));
 
     set({
       seasonState: {
@@ -433,6 +488,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         tournamentResult,
       },
       userStats: newStats,
+      runHistory: updatedHistory,
       isShareModalOpen: true,
     });
   },

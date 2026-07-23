@@ -1,5 +1,6 @@
 export type LeagueMode = 'IPL' | 'BBL' | 'WORLD_CRICKET';
 export type DifficultyMode = 'EASY' | 'HARD';
+export type AppView = 'HOME' | 'DRAFT';
 
 export type PlayerRole = 
   | 'OPENER'
@@ -108,11 +109,26 @@ export interface Achievement {
   isUnlocked: boolean;
 }
 
+export interface RunHistoryEntry {
+  id: string;
+  date: string;
+  leagueMode: LeagueMode;
+  wins: number;
+  losses: number;
+  ties: number;
+  squadOvr: number;
+  chemistry: number;
+  isChampion: boolean;
+  isFlawless: boolean;
+  squadNames: string[];
+}
+
 export interface UserStats {
   bestStreak: number;
   totalSeasonsPlayed: number;
   highestTeamOvr: number;
   totalWins: number;
+  totalLosses: number;
   leagueTitlesWon: number;
 }
 
