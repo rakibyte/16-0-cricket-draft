@@ -10,6 +10,53 @@ export interface SlotEfficiency {
   reason: string;
 }
 
+export const isPositionAllowed = (player: Player, requiredRole: PlayerRole): boolean => {
+  const pRole = player.primaryRole;
+  const sRole = player.secondaryRole;
+
+  const isPureBatter = (pRole === 'OPENER' || pRole === 'MIDDLE_ORDER') && sRole !== 'FAST_BOWLER' && sRole !== 'FRONTLINE_SPINNER';
+  const isPureBowler = (pRole === 'FAST_BOWLER' || pRole === 'FRONTLINE_SPINNER') && sRole !== 'OPENER' && sRole !== 'MIDDLE_ORDER';
+  const isWK = pRole === 'WICKETKEEPER' || sRole === 'WICKETKEEPER';
+  const isAllRounder = pRole === 'PACE_ALLROUNDER' || pRole === 'SPIN_ALLROUNDER' || sRole === 'PACE_ALLROUNDER' || sRole === 'SPIN_ALLROUNDER';
+
+  // Rule 1: Bowler Slots (FAST_BOWLER, FRONTLINE_SPINNER)
+  if (requiredRole === 'FAST_BOWLER' || requiredRole === 'FRONTLINE_SPINNER') {
+    // Pure Batters and Pure Wicketkeepers CANNOT play as frontline bowlers
+    if (isPureBatter || (isWK && !isPureBowler && !isAllRounder)) {
+      return false;
+    }
+    return true;
+  }
+
+  // Rule 2: Batter Slots (OPENER, MIDDLE_ORDER)
+  if (requiredRole === 'OPENER' || requiredRole === 'MIDDLE_ORDER') {
+    // Pure Bowlers CANNOT play in Top/Middle Order batting slots
+    if (isPureBowler && !isAllRounder) {
+      return false;
+    }
+    return true;
+  }
+
+  // Rule 3: Wicketkeeper Slot (WICKETKEEPER)
+  if (requiredRole === 'WICKETKEEPER') {
+    // Must be Wicketkeeper (primary or secondary)
+    if (!isWK) {
+      return false;
+    }
+    return true;
+  }
+
+  // Rule 4: All-Rounder Slots (PACE_ALLROUNDER, SPIN_ALLROUNDER)
+  if (requiredRole === 'PACE_ALLROUNDER' || requiredRole === 'SPIN_ALLROUNDER') {
+    if (isAllRounder || (sRole && (sRole as string) === (requiredRole as string))) {
+      return true;
+    }
+    return false;
+  }
+
+  return true;
+};
+
 export const calculateSlotEfficiency = (player: Player, requiredRole: PlayerRole): SlotEfficiency => {
   if (player.primaryRole === requiredRole) {
     return {
