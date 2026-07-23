@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { Play, FastForward, Trophy, ShieldAlert, Share2, RefreshCw, Table, Zap } from 'lucide-react';
+import { Play, FastForward, Trophy, ShieldAlert, Share2, RefreshCw, Table, Zap, BarChart2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playMatchWinSound } from '../../utils/soundEngine';
 import { triggerHapticSuccess } from '../../utils/hapticEngine';
@@ -14,6 +14,7 @@ export const MatchSimulator: React.FC = () => {
     restartSeason,
     setIsShareModalOpen,
     setActiveMatchSummary,
+    submitToLeaderboard,
   } = useGameStore();
 
   const [isSimulating, setIsSimulating] = useState(false);
@@ -100,11 +101,18 @@ export const MatchSimulator: React.FC = () => {
           {seasonState.isCompleted && (
             <>
               <button
+                onClick={() => submitToLeaderboard()}
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-400 to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(245,158,11,0.5)] hover:brightness-110 transition animate-pulse"
+              >
+                <BarChart2 className="w-4 h-4 text-slate-950" />
+                <span>Submit & Check Rank</span>
+              </button>
+              <button
                 onClick={() => setIsShareModalOpen(true)}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg"
+                className="px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-cyan-300 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-700 transition"
               >
                 <Share2 className="w-4 h-4" />
-                <span>Share Results Grid</span>
+                <span>Share Card</span>
               </button>
               <button
                 onClick={restartSeason}
@@ -307,7 +315,7 @@ export const MatchSimulator: React.FC = () => {
           {tournament.isChampion && (
             <div className="p-3 bg-emerald-950 border border-emerald-500/50 rounded-xl text-center text-emerald-300 font-black text-sm flex items-center justify-center gap-2">
               <Trophy className="w-5 h-5 text-amber-400 animate-bounce" />
-              <span>CONGRATULATIONS! YOUR XI IS THE IPL/BBL CHAMPION! 🏆</span>
+              <span>CONGRATULATIONS! YOUR XI IS THE CHAMPION! 🏆</span>
             </div>
           )}
         </div>

@@ -14,7 +14,7 @@ import type {
   RunHistoryEntry 
 } from '../types/game';
 import { INITIAL_SQUAD_SLOTS } from '../data/slotsConfig';
-import { IPL_TEAMS, BBL_TEAMS, WORLD_CRICKET_TEAMS } from '../data/mockTeams';
+import { IPL_TEAMS, BBL_TEAMS, WORLD_CRICKET_TEAMS, ALL_TIME_TEAMS } from '../data/mockTeams';
 import { INITIAL_ACHIEVEMENTS } from '../data/achievements';
 import { simulateMatch, generateTournamentStructure } from '../utils/simEngine';
 import { calculateSquadChemistry } from '../utils/chemistry';
@@ -37,6 +37,7 @@ interface GameStore {
   isProfileModalOpen: boolean;
   activeMatchSummary: MatchSummary | null;
   seasonState: SeasonState;
+  lastSubmittedLeaderboardId: string | null;
 
   // Global Player Unique Constraint (Normalized player names)
   draftedPlayerNames: string[];
@@ -83,6 +84,8 @@ export const getTeamsByMode = (mode: LeagueMode): Team[] => {
       return BBL_TEAMS;
     case 'WORLD_CRICKET':
       return WORLD_CRICKET_TEAMS;
+    case 'ALL_TIME_XI':
+      return ALL_TIME_TEAMS;
     default:
       return IPL_TEAMS;
   }
@@ -202,6 +205,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   isLeaderboardModalOpen: false,
   isProfileModalOpen: false,
   activeMatchSummary: null,
+  lastSubmittedLeaderboardId: null,
   draftedPlayerNames: [],
   coins: loadCoins(),
   userStats: loadStats(),
@@ -527,9 +531,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const isChamp = seasonState.tournamentResult?.isChampion || false;
 
     const score = seasonState.wins * 100 + effectiveSquadRating * 10 + chemistryScore * 5 + (isChamp ? 500 : 0);
+    const entryId = `lb-${Date.now()}`;
 
     const newEntry: LeaderboardEntry = {
-      id: `lb-${Date.now()}`,
+      id: entryId,
       username: username || 'CricketFan',
       leagueMode,
       wins: seasonState.wins,
@@ -545,6 +550,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const updatedList = [...leaderboardEntries, newEntry].sort((a, b) => b.score - a.score);
     localStorage.setItem(SAVED_LEADERBOARD_KEY, JSON.stringify(updatedList));
 
-    set({ leaderboardEntries: updatedList });
+    set({ 
+      leaderboardEntries: updatedList,
+      lastSubmittedLeaderboardId: entryId,
+      isLeaderboardModalOpen: true,
+    });
   },
 }));

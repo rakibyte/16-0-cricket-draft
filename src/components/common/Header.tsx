@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { RefreshCw, Video, Globe, Shield, Flame, Award, Eye, EyeOff, BarChart2, User, Home } from 'lucide-react';
+import { RefreshCw, Video, Globe, Shield, Flame, Award, Eye, EyeOff, BarChart2, User, Home, Sparkles } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { 
@@ -49,43 +49,55 @@ export const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* League Selector (IPL, BBL, World Cricket) */}
+        {/* League Selector (IPL, BBL, World Cricket, All-Time XI) */}
         {currentView === 'DRAFT' && (
-          <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+          <div className="flex flex-wrap items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
             <button
               onClick={() => setLeagueMode('IPL')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
                 leagueMode === 'IPL'
                   ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <Shield className="w-3.5 h-3.5" />
-              IPL (2008-2025)
+              IPL
             </button>
 
             <button
               onClick={() => setLeagueMode('BBL')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
                 leagueMode === 'BBL'
                   ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <Flame className="w-3.5 h-3.5" />
-              Big Bash (BBL)
+              BBL
             </button>
 
             <button
               onClick={() => setLeagueMode('WORLD_CRICKET')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
                 leagueMode === 'WORLD_CRICKET'
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <Globe className="w-3.5 h-3.5" />
-              World Cricket
+              World
+            </button>
+
+            <button
+              onClick={() => setLeagueMode('ALL_TIME_XI')}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+                leagueMode === 'ALL_TIME_XI'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-300 fill-current" />
+              All-Time XI
             </button>
           </div>
         )}

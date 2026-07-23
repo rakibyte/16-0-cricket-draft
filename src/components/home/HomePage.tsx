@@ -100,7 +100,7 @@ export const HomePage: React.FC = () => {
           CHOOSE LEAGUE MODE TO START DRAFT
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* IPL */}
           <div
             onClick={() => handleStartDraft('IPL')}
@@ -115,18 +115,18 @@ export const HomePage: React.FC = () => {
                 <Shield className="w-5 h-5" />
               </div>
               <span className="text-[10px] font-black text-amber-300 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 uppercase">
-                17 SEASONS
+                IPL
               </span>
             </div>
             <div>
-              <h4 className="text-lg font-black text-white">IPL (2008 – 2025)</h4>
+              <h4 className="text-base font-black text-white">IPL (2008–2025)</h4>
               <p className="text-xs text-slate-400 mt-1">
-                Draft from historic IPL rosters: RR 2008, Deccan Chargers 2009, CSK, MI, KKR, SRH, RCB & GT.
+                Draft from 17 IPL seasons: RR 2008, Deccan 2009, CSK, MI, KKR, SRH & GT.
               </p>
             </div>
             <button className="w-full py-2.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400 transition flex items-center justify-center gap-1.5">
               <Play className="w-3.5 h-3.5 fill-current" />
-              Start IPL Draft
+              IPL Draft
             </button>
           </div>
 
@@ -144,18 +144,18 @@ export const HomePage: React.FC = () => {
                 <Flame className="w-5 h-5" />
               </div>
               <span className="text-[10px] font-black text-cyan-300 px-2 py-0.5 rounded bg-cyan-500/20 border border-cyan-500/30 uppercase">
-                13 SEASONS
+                BBL
               </span>
             </div>
             <div>
-              <h4 className="text-lg font-black text-white">Big Bash League (BBL)</h4>
+              <h4 className="text-base font-black text-white">Big Bash League</h4>
               <p className="text-xs text-slate-400 mt-1">
-                Draft from BBL|01 to BBL|13 champions: Sydney Sixers, Perth Scorchers, Adelaide Strikers & Brisbane Heat.
+                Draft from BBL champions: Sydney Sixers, Scorchers, Strikers & Brisbane Heat.
               </p>
             </div>
             <button className="w-full py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-black text-xs hover:bg-cyan-400 transition flex items-center justify-center gap-1.5">
               <Play className="w-3.5 h-3.5 fill-current" />
-              Start BBL Draft
+              BBL Draft
             </button>
           </div>
 
@@ -173,18 +173,47 @@ export const HomePage: React.FC = () => {
                 <Globe className="w-5 h-5" />
               </div>
               <span className="text-[10px] font-black text-emerald-300 px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 uppercase">
-                1975 – 2024
+                WORLD
               </span>
             </div>
             <div>
-              <h4 className="text-lg font-black text-white">World Cricket Legends</h4>
+              <h4 className="text-base font-black text-white">World Legends</h4>
               <p className="text-xs text-slate-400 mt-1">
-                Draft from legendary international teams: West Indies 1979, India 1983, Aus 1999, India 2011 & 2024.
+                Draft from World Cup champions: West Indies 79, India 83, Aus 99, India 2011/24.
               </p>
             </div>
             <button className="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition flex items-center justify-center gap-1.5">
               <Play className="w-3.5 h-3.5 fill-current" />
-              Start World Draft
+              World Draft
+            </button>
+          </div>
+
+          {/* All-Time XI */}
+          <div
+            onClick={() => handleStartDraft('ALL_TIME_XI')}
+            className={`p-5 rounded-3xl border-2 transition cursor-pointer flex flex-col justify-between space-y-4 hover:scale-[1.02] ${
+              leagueMode === 'ALL_TIME_XI'
+                ? 'bg-gradient-to-br from-purple-950/80 via-slate-900 to-slate-950 border-purple-500 shadow-[0_0_25px_rgba(168,85,247,0.3)]'
+                : 'bg-slate-900/90 border-slate-800 hover:border-purple-500/50'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                <Sparkles className="w-5 h-5 fill-current" />
+              </div>
+              <span className="text-[10px] font-black text-purple-300 px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/30 uppercase">
+                ALL-TIME XI
+              </span>
+            </div>
+            <div>
+              <h4 className="text-base font-black text-white">All-Time Franchise XI</h4>
+              <p className="text-xs text-slate-400 mt-1">
+                Draft from All-Time rosters: CSK, MI, Team India, Australia, West Indies & RCB legends!
+              </p>
+            </div>
+            <button className="w-full py-2.5 rounded-xl bg-purple-500 text-white font-black text-xs hover:bg-purple-400 transition flex items-center justify-center gap-1.5 shadow-lg">
+              <Play className="w-3.5 h-3.5 fill-current" />
+              All-Time Draft
             </button>
           </div>
         </div>

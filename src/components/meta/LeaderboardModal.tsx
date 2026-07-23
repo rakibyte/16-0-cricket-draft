@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { useGameStore } from '../../store/useGameStore';
-import { User, Send, CheckCircle2, Crown } from 'lucide-react';
+import { User, Send, CheckCircle2, Crown, Sparkles } from 'lucide-react';
 import { playCoinClaimSound } from '../../utils/soundEngine';
 
 export const LeaderboardModal: React.FC = () => {
@@ -13,6 +13,7 @@ export const LeaderboardModal: React.FC = () => {
     leaderboardEntries,
     submitToLeaderboard,
     seasonState,
+    lastSubmittedLeaderboardId,
   } = useGameStore();
 
   const [inputName, setInputName] = useState(username || 'CricketGod99');
@@ -102,12 +103,15 @@ export const LeaderboardModal: React.FC = () => {
               <tbody className="divide-y divide-slate-800/60 font-semibold text-slate-200">
                 {leaderboardEntries.map((entry, idx) => {
                   const rank = idx + 1;
+                  const isUserSubmitted = entry.id === lastSubmittedLeaderboardId;
 
                   return (
                     <tr
                       key={entry.id}
                       className={
-                        rank === 1
+                        isUserSubmitted
+                          ? 'bg-gradient-to-r from-emerald-950 to-slate-900 text-emerald-300 font-black border-2 border-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.3)] animate-pulse'
+                          : rank === 1
                           ? 'bg-amber-950/60 text-amber-300 border-l-4 border-l-amber-400 font-extrabold'
                           : rank === 2
                           ? 'bg-slate-900/90 text-cyan-300 border-l-4 border-l-cyan-400'
@@ -123,6 +127,12 @@ export const LeaderboardModal: React.FC = () => {
                         <div className="flex items-center gap-1.5">
                           <span className="font-extrabold text-white">{entry.username}</span>
                           {entry.isChampion && <Crown className="w-3.5 h-3.5 text-amber-400" />}
+                          {isUserSubmitted && (
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 text-[9px] font-black uppercase flex items-center gap-0.5">
+                              <Sparkles className="w-2.5 h-2.5 fill-current" />
+                              YOU (Rank #{rank})
+                            </span>
+                          )}
                         </div>
                         <p className="text-[10px] text-slate-400 truncate max-w-[180px]">
                           {entry.draftedPlayers.slice(0, 3).join(', ')}...

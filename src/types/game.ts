@@ -1,4 +1,4 @@
-export type LeagueMode = 'IPL' | 'BBL' | 'WORLD_CRICKET';
+export type LeagueMode = 'IPL' | 'BBL' | 'WORLD_CRICKET' | 'ALL_TIME_XI';
 export type DifficultyMode = 'EASY' | 'HARD';
 export type AppView = 'HOME' | 'DRAFT';
 
