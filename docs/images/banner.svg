@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="50%" stop-color="#091e17"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="50%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="15" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Subtle Grid Lines -->
+  <path d="M0 150 H1200 M0 300 H1200 M0 450 H1200 M300 0 V630 M600 0 V630 M900 0 V630" stroke="#1e293b" stroke-width="1" opacity="0.3"/>
+
+  <!-- Glow Accents -->
+  <circle cx="200" cy="150" r="120" fill="#10b981" opacity="0.15" filter="url(#glow)"/>
+  <circle cx="1000" cy="450" r="150" fill="#a855f7" opacity="0.15" filter="url(#glow)"/>
+
+  <!-- Game Logo & Title -->
+  <rect x="500" y="80" width="200" height="70" rx="20" fill="url(#accent)" opacity="0.2"/>
+  <text x="600" y="125" font-family="system-ui, sans-serif" font-weight="900" font-size="32" fill="#34d399" text-anchor="middle" letter-spacing="4">16-0 DRAFT</text>
+
+  <text x="600" y="210" font-family="system-ui, sans-serif" font-weight="900" font-size="54" fill="#ffffff" text-anchor="middle">CRICKET SQUAD DRAFT</text>
+  <text x="600" y="255" font-family="system-ui, sans-serif" font-weight="600" font-size="22" fill="#94a3b8" text-anchor="middle">Spin Historic Rosters &bull; Draft XI Squad &bull; 16-Match Campaign &bull; Live Multiplayer</text>
+
+  <!-- UI Card Mockups -->
+  <!-- Card 1: IPL Draft -->
+  <rect x="150" y="320" width="260" height="230" rx="24" fill="#0f172a" stroke="#f59e0b" stroke-width="2" opacity="0.9"/>
+  <text x="280" y="370" font-family="system-ui, sans-serif" font-weight="800" font-size="20" fill="#fbbf24" text-anchor="middle">IPL LEAGUE</text>
+  <text x="280" y="410" font-family="system-ui, sans-serif" font-weight="600" font-size="14" fill="#94a3b8" text-anchor="middle">17 Historical Seasons</text>
+  <rect x="180" y="440" width="200" height="40" rx="12" fill="#f59e0b"/>
+  <text x="280" y="465" font-family="system-ui, sans-serif" font-weight="900" font-size="14" fill="#020617" text-anchor="middle">START DRAFT</text>
+
+  <!-- Card 2: Pitch & XI -->
+  <rect x="470" y="300" width="260" height="270" rx="24" fill="#0f172a" stroke="#10b981" stroke-width="3" opacity="0.95" filter="url(#glow)"/>
+  <text x="600" y="350" font-family="system-ui, sans-serif" font-weight="900" font-size="22" fill="#34d399" text-anchor="middle">CRICKET PITCH XI</text>
+  <text x="600" y="390" font-family="system-ui, sans-serif" font-weight="600" font-size="14" fill="#94a3b8" text-anchor="middle">Balanced Squad Chemistry</text>
+  <circle cx="600" cy="450" r="35" fill="#059669"/>
+  <text x="600" y="457" font-family="system-ui, sans-serif" font-weight="900" font-size="20" fill="#ffffff" text-anchor="middle">92</text>
+  <rect x="500" y="500" width="200" height="40" rx="12" fill="#10b981"/>
+  <text x="600" y="525" font-family="system-ui, sans-serif" font-weight="900" font-size="14" fill="#020617" text-anchor="middle">SIMULATE SEASON</text>
+
+  <!-- Card 3: Live Multiplayer -->
+  <rect x="790" y="320" width="260" height="230" rx="24" fill="#0f172a" stroke="#a855f7" stroke-width="2" opacity="0.9"/>
+  <text x="920" y="370" font-family="system-ui, sans-serif" font-weight="800" font-size="20" fill="#c084fc" text-anchor="middle">MULTIPLAYER ROOM</text>
+  <text x="920" y="410" font-family="system-ui, sans-serif" font-weight="600" font-size="14" fill="#94a3b8" text-anchor="middle">3-Min Live Countdown</text>
+  <rect x="820" y="440" width="200" height="40" rx="12" fill="#a855f7"/>
+  <text x="920" y="465" font-family="system-ui, sans-serif" font-weight="900" font-size="14" fill="#ffffff" text-anchor="middle">CREATE ROOM</text>
+</svg>

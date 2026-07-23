@@ -1,0 +1,16 @@
+{
+  "appId": "com.rakibyte.cricketdraft160",
+  "appName": "16-0 Cricket Squad Draft",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#020617",
+      "showSpinner": false
+    }
+  }
+}
